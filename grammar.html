@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- saved from url=(0048)http://temporaryculture.com/tools/sara/sara.html -->
+<html class=" js flexbox flexboxlegacy canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths gr__temporaryculture_com">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="author" content="Thomas Duc">
+    <meta name="copyright" content="Copyright © 2014– temporary culture">
+    <meta name="keywords" content="LED, compiler , JavaScript">
+    <meta name="description" content="This page transforms your code for LED into compiled code for the led driver">
+    <title>Sara LED</title>
+
+    <!--[if IE]>
+    <script>
+        var html5elements = ["aside", "footer", "header", "nav"];
+        for (var i = 0; i < html5elements.length; i++) {
+            document.createElement(html5elements[i]);
+        }
+    </script>
+    <![endif]-->
+
+    <script src="./grammar_files/jquery.js"></script>
+    <script src="./grammar_files/parser.js"></script>
+    <script src="./grammar_files/modernizr.js"></script>
+    <script src="./grammar_files/auto-parse.js"></script>
+    <script type="text/javascript">
+    </script>
+
+
+    <style type="text/css">
+        .messageError {
+            background-color: red;
+        }
+
+        .messageInfo {
+            background-color: blue;
+        }
+
+        .messageProgress {
+            font-style: bold;
+        }
+    </style>
+
+    <style id="style-1-cropbar-clipper">/* Copyright 2014 Evernote Corporation. All rights reserved. */
+    .en-markup-crop-options {
+        top: 18px !important;
+        left: 50% !important;
+        margin-left: -100px !important;
+        width: 200px !important;
+        border: 2px rgba(255, 255, 255, .38) solid !important;
+        border-radius: 4px !important;
+    }
+
+    .en-markup-crop-options div div:first-of-type {
+        margin-left: 0px !important;
+    }
+    </style>
+</head>
+<div class="gr-top-z-index gr-top-zero" tabindex="-1">
+    <div class="_44eb54-hoverMenu _44eb54-anonymous" style="transform: translate(797px, 184px);"
+         data-grammarly-reactid=".2">
+        <div class="_44eb54-panel" data-grammarly-reactid=".2.0">
+            <div class="_44eb54-tooltip _44eb54-tooltip_hidden undefined" data-grammarly-reactid=".2.0.0"></div>
+            <div class="_44eb54-buttonArea" data-grammarly-reactid=".2.0.1">
+                <div class="_44eb54-btn _44eb54-btn_disable" tabindex="-1" data-grammarly-reactid=".2.0.1.0"></div>
+            </div>
+            <div class="_44eb54-line" data-grammarly-reactid=".2.0.3"></div>
+            <div class="_44eb54-buttonArea" data-grammarly-reactid=".2.0.5">
+                <div class="_44eb54-btn _44eb54-btn_grammarly" data-action="editor" tabindex="-1"
+                     data-grammarly-reactid=".2.0.5.0"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<div style="visibility: hidden; top: -9999px; position: absolute; opacity: 0;">
+    <div class="_44eb54-hoverMenu _44eb54-anonymous" style="transform: translate(862px, 199px);"
+         data-grammarly-reactid=".1">
+        <div class="_44eb54-panel" data-grammarly-reactid=".1.0">
+            <div class="_44eb54-tooltip _44eb54-tooltip_hidden undefined" data-grammarly-reactid=".1.0.0"></div>
+            <div class="_44eb54-buttonArea" data-grammarly-reactid=".1.0.1">
+                <div class="_44eb54-btn _44eb54-btn_disable" tabindex="-1" data-grammarly-reactid=".1.0.1.0"></div>
+            </div>
+            <div class="_44eb54-line" data-grammarly-reactid=".1.0.3"></div>
+            <div class="_44eb54-buttonArea" data-grammarly-reactid=".1.0.5">
+                <div class="_44eb54-btn _44eb54-btn_grammarly" data-action="editor" tabindex="-1"
+                     data-grammarly-reactid=".1.0.5.0"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<body data-gr-c-s-loaded="true">
+<grammarly-ghost spellcheck="false">
+    <div style="position: absolute; color: transparent; overflow: hidden; white-space: pre-wrap; border-radius: 0px; box-sizing: content-box; height: 205px; width: 853px; z-index: 0; padding: 2px; margin: 8px 0px 0px 8px; border: 1px solid transparent; top: 0px; left: 0px; background: none 0% 0% / auto repeat scroll padding-box border-box rgb(255, 255, 255);"
+         data-id="18d1ef84-a30c-9971-7b39-b4067b35bf57" data-gramm_id="18d1ef84-a30c-9971-7b39-b4067b35bf57"
+         data-gramm="gramm" data-gramm_editor="true" class="gr_ver_2" data-grammarly-reactid=".5"
+         contenteditable="true"><span
+            style="display: inline-block; color: transparent; overflow: hidden; text-align: left; float: initial; clear: none; box-sizing: border-box; vertical-align: baseline; white-space: pre-wrap; width: 100%; margin: 0px; padding: 0px; border: 0px; font-style: normal; font-variant: normal; font-weight: normal; font-stretch: normal; line-height: normal; font-size: 11px; font-family: BlinkMacSystemFont; letter-spacing: normal; text-shadow: none; height: 209px;"
+            data-grammarly-reactid=".5.0"><gr_block p="0,236"
+                                                    style="display: inline;">.segment program1              <br>&nbsp;               mux_sel 7 <br>loop1:          set_pwm FFh    <br>&nbsp;               wait 0.48       <br>&nbsp;               set_pwm 00h    <br>&nbsp;               wait 0.48     <br>&nbsp;               branch 0, loop1 <br>&nbsp;              &nbsp;</gr_block></span><br
+            data-grammarly-reactid=".5.1"></div>
+</grammarly-ghost>
+<textarea id="input" class="code"
+          style="height: 205px; width: 853px; z-index: auto; position: relative; line-height: normal; font-size: 11px; transition: none; background: transparent !important;"
+          placeholder="your code here" data-gramm="true" data-txt_gramm_id="18d1ef84-a30c-9971-7b39-b4067b35bf57"
+          data-gramm_id="18d1ef84-a30c-9971-7b39-b4067b35bf57" spellcheck="false" data-gramm_editor="true"></textarea>
+<grammarly-btn>
+    <div style="z-index: 2; opacity: 1; transform: translate(836px, 188px);"
+         class="_9b5ef6-textarea_btn _9b5ef6-show _9b5ef6-anonymous _9b5ef6-field_hovered" data-grammarly-reactid=".0">
+        <div class="_9b5ef6-transform_wrap" data-grammarly-reactid=".0.0">
+            <div title="Protected by Grammarly" class="_9b5ef6-status" data-grammarly-reactid=".0.0.0">&nbsp;</div>
+        </div>
+        <span class="_9b5ef6-btn_text" data-grammarly-reactid=".0.1">Not signed in</span></div>
+</grammarly-btn>
+<div id="parse-message" class="messageError">ledGrammar.pegParse is not a function</div>
+<h2 id="output-header">Compiled code:</h2>
+<pre id="output" class="disabled">Output not available yet.</pre>
+
+
+</body>
+<div style="visibility: hidden; top: -9999px; position: absolute; opacity: 0;"></div>
+<div style="visibility: hidden; top: -9999px; position: absolute; opacity: 0;"></div>
+<span class="gr__tooltip"><span class="gr__tooltip-content"></span><i class="gr__tooltip-logo"></i><span
+        class="gr__triangle"></span></span>
+<div>
+    <div class="gr_-editor" style="display:none;" data-grammarly-reactid=".3">
+        <div class="gr_-editor_back" data-grammarly-reactid=".3.0"></div>
+        <iframe class="gr_-ifr gr-_dialog-content" data-grammarly-reactid=".3.1"
+                src=""></iframe>
+    </div>
+</div>
+<grammarly-card>
+    <div tabindex="-1" style="top:0;left:0;visibility:hidden;" class="gr-grammar-card gr-grammar-card_anonymous"
+         data-grammarly-reactid=".4"><span style="margin-left:0;" class="gr-grammar-card_triangle"
+                                           data-grammarly-reactid=".4.0"></span>
+        <div class="gr-grammar-card_footer gr-grammar-card_anonymous" data-grammarly-reactid=".4.5"><a
+                class="gr-grammar-card_link" tabindex="-1" data-action="login" target="__blank"
+                data-grammarly-reactid=".4.5.0">Log in</a><span data-grammarly-reactid=".4.5.1">&nbsp;to enable personalized grammar and spelling checks,</span><br
+                data-grammarly-reactid=".4.5.2"><span data-grammarly-reactid=".4.5.3">a custom dictionary, and additional features. It's free!</span>
+        </div>
+    </div>
+</grammarly-card>
+</html>

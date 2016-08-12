@@ -1,0 +1,412 @@
+//---------------------------------------------------------------------------
+//
+//                     LP55321 LED DRIVER LANGUAGE PARSER
+//
+//---------------------------------------------------------------------------
+
+{
+  var labels = [];
+  var forwardDeclaration = [] ;
+  var compiledProgram    = [] ;
+  var enginesProgram     = [] ; 
+  var currentPosition = 0  ;
+  var currentSegment  = "data" ;
+  var debug = false;
+
+ //############################
+ function getLabelPosition(name , positionInCode){
+
+   // first determine the segment in which this label is
+   var startOfSegment = enginesProgram[0].position; 
+   enginesProgram.forEach(function findSegment(currentSegment) {
+      if (currentSegment.position < positionInCode) {
+          startOfSegment = currentSegment.position;
+      }
+    });
+  
+    // then find the postion in the code (irrelevant of segments)
+    var positionOfLabel  = -1 ;
+    labels.forEach(function findPosition(currentLabel) {
+      if (currentLabel.name == name){
+          positionOfLabel = currentLabel.position;
+          if (currentLabel.segment == 'data') startOfSegment = 0; 
+      }
+    });
+   var realPosition = positionOfLabel - startOfSegment;
+   return  realPosition;
+ }
+  
+
+ //############################
+ function binaryToNumber(numberAsZeroOnes){
+  var numberAsDecimal = 0 ;
+  var highestPower    = numberAsZeroOnes.length -1 ;
+
+
+  numberAsZeroOnes.forEach(function decodeBinary(currentBit) {
+      
+      numberAsDecimal = numberAsDecimal + (Math.pow(2,highestPower)*currentBit);
+      highestPower--;
+  });
+
+  return numberAsDecimal ; //numberAsDecimal;
+ }
+
+}
+//================================================
+//================================================
+
+start
+  = instruction  ('\n' instruction)* "\n"?
+
+instruction
+= (space* labelDeclaration? space* command? space*  ledComment? ) 
+
+space
+= ' '
+  /'\t'
+
+command
+=   debug 
+  / showCompiled
+  / labelDeclaration
+  / ledDirective
+  / ledSegment
+  / mux_with_operand
+  / ledSetPwn
+  / instruction_no_operand
+  / data_operations
+  / trigger_command
+  / jump_command
+  / waitInstruction
+  / rampInstruction 
+  / branchCommand 
+
+    
+debug
+= 'debug'i {
+debug = true ;
+return "debug mode";
+}
+
+
+showCompiled
+= ('show code'i) {
+   return {compiledProgram , enginesProgram} ;
+}
+
+
+//---------------------------------------------------------------------------
+// ----------------------- LED DIRECTIVES  ---------------------------------
+//---------------------------------------------------------------------------
+
+ledComment
+=  space* (";"/"//") space* comment:[a-z 0-9 . , % _ = ' ( ) < >  ]i* space*{
+var currentComment = comment.join("");
+if (debug)return currentComment;
+}
+
+// ======================================================
+ledSegment
+= '.segment' space*  segment:[a-z 0-9]i*   {
+
+ var segmentName = segment.join("").trim();
+
+ enginesProgram.push({"name" : segmentName,"position" : currentPosition});
+ currentSegment = segmentName ;
+ if (debug) return enginesProgram ;
+
+}
+
+
+// ======================================================
+ledDirective
+= directive:('dw 'i / 'ds 'i) operand:number {
+ var compiledCode = 0x0000;
+ 
+ switch(directive.toLowerCase()) {
+
+                
+  case  'dw ' : compiledCode = operand.toString(16) ; // makes sure that compiled code is 0
+                break;
+
+  case  'ds ' : currentPosition =  currentPosition + operand ; // reserve operand bytes (8bit)
+                break;
+  }
+ 
+ compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+ currentPosition++ ;
+ if (debug) return {directive, operand,compiledCode};
+
+}
+
+
+
+//---------------------------------------------------------------------------
+// ---------------- LED DRIVER PRIMITIVE TYPES ------------------------------
+//---------------------------------------------------------------------------
+
+// ======================================================
+labelDeclaration
+= labelName:[^(' '/':')]i* ':'  {
+ var name = labelName.join(""); 
+ labels.push({ "segment" : currentSegment ,"name":name,"position":currentPosition});
+ if (debug) return {"name" : name , "label array" : labels };
+}
+
+
+// ======================================================
+ledLabelName
+=labelName:([a-z 0-9 _ ]i+) ' '* { 
+var currentLabel = labelName.join("").trim();
+return currentLabel;
+}
+
+
+// ======================================================
+number
+= digits:([a-h 0-9 . -]i+) { 
+
+ var compiledNumber ;
+ var theNumber = digits.join("").trim() ;
+
+ if (theNumber === 'e') compiledNumber = 4; //for external interrupt
+ else if (theNumber.slice(-1) == 'h') compiledNumber = parseInt("0x" + theNumber.slice(0,-1) ,16);
+ else if (theNumber.indexOf('b') != -1) compiledNumber = binaryToNumber(digits.slice(0,digits.length -2));
+ else if (theNumber.indexOf('.') != -1) compiledNumber = parseFloat(theNumber);
+ else   compiledNumber = parseInt(digits.join(''));
+
+ return compiledNumber ;
+}
+
+
+
+
+
+// ======================================================
+ledVariable
+= ledVar:('r'[a-d]i+)  { 
+
+   switch (ledVar.join('').toLowerCase()){
+    case "ra": return 0 ;break;
+    case "rb": return 1 ;break;
+    case "rc": return 2 ;break;
+    case "rd": return 3 ;break;
+    default  : return "error, variable name unknown, should be of the form rX where x is a letter";
+   }
+}
+
+// ---------------- LED DRIVER INSTRUCTIONS ------------------------------
+
+
+// ============
+rampInstruction
+ = 'ramp' space* operand1:number space* ',' space* operand2:number { 
+ var compiledCode = 0x0000;
+
+
+ var timeToRamp = 0;
+ if (operand1 < 1 ) {
+  timeToRamp = Math.round(operand1 * 8)<<2 ;
+ }
+ else if (operand1 == 1) timeToRamp = 0x10 ;
+ else if (operand1 < 4 ) {
+  var above1 = Math.round(operand1) ; 
+  var below1 = (operand1 - above1)*10 ;
+  timeToRamp = (above1 * 16) + Math.round(below1);
+ }
+ else if (operand1 < 127 ){
+  timeToRamp = Math.round(operand1 ) ;
+ }
+ else expected("max time for a ramp is 127 seconds"); 
+
+// FIXME: Math.abs(operand2) shouldn't be there, number should be encoded in binary with
+//        possibility of negative numbers (coded complement to1?)
+ compiledCode = compiledCode + ( timeToRamp << 8) + Math.abs(operand2);
+ compiledProgram.push({"key" : currentPosition , "code" : compiledCode.toString(16) }) ;
+ 
+ currentPosition++;
+ if (debug) {compiledCode, operand1 ,operand2,timeToRamp,above1, below1} ;
+}
+
+
+// ======================================================
+waitInstruction
+= 'wait 'i operand1:(number) { 
+ 
+ var compiledCode = 0x000;
+  if (operand1 < 0.0002)     compiledCode = 0;
+  else if (operand1 < 0.02 ) compiledCode = Math.round( 0xFF0 * operand1);
+  else if (operand1 < 0.08 ) compiledCode =  0x4200 + Math.round( 100 * operand1 * 0x100);  
+  else if (operand1 < 0.484) compiledCode =  0x4C00 + ( Math.round(132 * (operand1- 0.1)) << 8) ;
+  else expected("a wait time below 0.484 seconds");         
+                   
+ 
+  compiledProgram.push({"key" : currentPosition , "code" : compiledCode.toString(16)}) ;
+
+  currentPosition++;
+
+  if (debug ) return {"wait" : operand1, "compiled" :compiledCode.toString(16)};
+}
+
+
+// ======================================================
+ledSetPwn
+='set_pwm 'i operand1:(number/ledVariable) {
+
+  var compiledCode = (0x4000 + operand1).toString(16) ;
+  compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+
+  currentPosition++;
+
+  if (debug) return {"set_PWM" : operand1};
+}
+
+
+// ---------------- LED MAPPING INSTRUCTIONS ------------------------------
+
+branchCommand
+= 'branch 'i ' '* operand1:number ' '* ',' ' '* operand2:ledLabelName {
+   var labelToBranchTo = operand2.trim();
+   var addressToBranchTo = getLabelPosition(labelToBranchTo, currentPosition) ;
+   var compiledInstruction = (0xA000  + (operand1 << 7 )+ addressToBranchTo ).toString(16) ; 
+
+   compiledProgram.push({"key" : currentPosition , "code" : compiledInstruction.toString(16)}) ;
+
+   currentPosition++;
+   if (debug) return {"branch" : compiledCode , addressToBranchTo};
+}
+
+// ------------------------------------------------
+mux_with_operand
+= instruction:(   "mux_ld_start "i 
+                / "mux_map_start "i 
+                / "mux_ld_end "i 
+                / "mux_ld_addr "i 
+                / "mux_map_addr "i 
+    / "mux_sel "i ) 
+                operand1:ledLabelName {
+
+
+  var instructionName = instruction ;
+  var compiledInstruction = 0x0000 ;
+  switch (instruction.toLowerCase() ){
+   case 'mux_ld_start ' :  compiledInstruction = 0x9E00 ; break;  
+   case 'mux_map_start ':  compiledInstruction = 0x9C00 ; break;
+   case 'mux_ld_end '   :  compiledInstruction = 0x9C80 ; break;
+   case 'mux_ld_addr '  :  compiledInstruction = 0x9F00 ; break;
+   case 'mux_map_addr ' :  compiledInstruction = 0x9F80 ; break;
+   case 'mux_sel '  :  compiledInstruction = 0x9D00 ; break;
+   default: return "error in mux instruction, check your spelling";
+  }
+  compiledInstruction = (compiledInstruction + getLabelPosition(operand1, currentPosition)).toString(16);
+  var actualLabelPosition = getLabelPosition(operand1, currentPosition) ;
+  compiledProgram.push({"key" : currentPosition , "code" : compiledInstruction}) ;
+
+  currentPosition++;
+  if (debug) return {instructionName,operand1,actualLabelPosition, compiledInstruction};  
+}
+
+
+// ------------------------------------------------
+instruction_no_operand
+=instruction: ('mux_clr'i 
+                / 'mux_map_next'i 
+                / 'mux_map_prev'i 
+                / 'mux_ld_next'i 
+                / 'mux_ld_prev'i
+                / 'rst'i
+                / 'int'i 
+                / 'end'i  ){
+
+
+
+   var compiledCode = 0x0000 ;
+   switch (instruction.toLowerCase() ){
+     case 'mux_clr'     :  compiledCode = 0x9D00.toString(16) ; break;  
+     case 'mux_map_next':  compiledCode = 0x9D80.toString(16) ; break;
+     case 'mux_map_prev':  compiledCode = 0x9DC0.toString(16) ; break;
+     case 'mux_ld_next' :  compiledCode = 0x9D81.toString(16) ; break;
+     case 'mux_ld_prev' :  compiledCode = 0x9DC1.toString(16) ; break;
+     case 'rst'         :  compiledCode = 0x0000.toString(16) ; break;
+     case 'int'         :  compiledCode = 0xC400.toString(16) ; break;
+     case 'end'         :  compiledCode = 0xD000.toString(16) ; break;
+     default: expect("error in mux no operand, check your spelling");
+   }
+
+  compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+
+  currentPosition++;
+
+  if (debug) return instruction;
+}
+
+
+
+// ---------------- DATA TRANSFER AND ARITHMETIC INSTRUCTIONS -------------------------
+
+
+data_operations
+= instruction:(   "ld "i / "add "i / "sub "i / "mux_ld_addr "i / "mux_map_addr "i) 
+                 operand1:ledVariable ' '* ','
+                 ' '* operand2:(ledVariable / number)
+                 op3:(' '* ',' ' '* ledVariable ' '* '\n'*)?  {
+     var compiledCode = 0x0000;
+
+     switch (instruction.toLowerCase() ){
+      case 'ld '  :                  compiledCode = (0x9000 + (operand1 << 10) + operand2).toString(16) ;
+                    break;
+      case 'add ' : if (op3 == null) compiledCode = (0x9100 + operand1 + operand2).toString(16);
+                    else             compiledCode = (0x9300 + operand2 + op3[3]).toString(16)  ;
+                    break;
+      case 'sub ' : if (op3 == null) compiledCode = (0x9200 + operand1 + operand2).toString(16) ;
+                    else             compiledCode = (0x9300 + operand2 + op3[3]).toString(16)   ;
+                    break; 
+     }
+
+  compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+
+  currentPosition++;
+  return compiledCode;
+}
+
+// ---------------- LED BRANCH INSTRUCTIONS ------------------------------
+
+trigger_command
+="trigger "i source:('w'i /'s'i)'{' engine:number '}'
+{
+  var targetOrSource = 0xE000 ;
+  if (source.toLowerCase() === 'w') targetOrSource = 0xE000 ;
+  
+  var compiledCode = (targetOrSource + (engine-1)).toString(16);
+  compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+
+  currentPosition++;
+  return compiledCode;
+  
+}
+
+
+// ------------------------------------------------
+jump_command
+= instruction:  ( "jne "i / "jl "i / "jge "i / "je "i )
+                 operand1:ledVariable ' '* ','
+                 ' '* operand2:ledVariable
+                 ' '* ',' ' '* operand3:ledLabelName ' '* '\n'*  {
+
+      
+      switch (instruction.toLowerCase() ){
+       case 'jne ' : commandNumber = 0x8800 ; break;
+       case 'jl '  : commandNumber = 0x8A00 ; break;
+       case 'jge ' : commandNumber = 0x8C00 ; break;
+       case 'je '  : commandNumber = 0x8E00 ; break;
+      }    
+
+      var variableEncoded = (operand1 << 2)+operand2;  
+      var compiledCode = (commandNumber +  variableEncoded).toString(16) ;
+      forwardDeclaration.push({"name" : operand3, "position" :currentPosition});
+      compiledProgram.push({"key" : currentPosition , "code" : compiledCode}) ;
+
+      currentPosition++;
+      return compiledCode;
+}

@@ -1,0 +1,8 @@
+.segment program1               ; Begin of a segment
+                mux_sel 7       ; Selects LED 7 (a red LED on the eval. board).
+loop1:          set_pwm FFh     ; Beginning of a loop, set PWM to full scale.
+                wait 0.48       ; Wait for 0.48 seconds.
+                set_pwm 00h     ; Set PWM to 0%
+                wait 0.48       ; Wait for 0.48 seconds
+                branch 0, loop1 ; Endless loop.
+                

@@ -1,0 +1,20 @@
+  1 00         .segment program1               ; Begin of a segment
+  2 00 9D07                    mux_sel 7       ; Selects LED 7 (a red LED on the eval. board).
+  3 01 40FF    loop1:          set_pwm FFh     ; Beginning of a loop, set PWM to full scale.
+  4 02 7E00                    wait 0.48       ; Wait for 0.48 seconds.
+  5 03 4000                    set_pwm 00h     ; Set PWM to 0%
+  6 04 7E00                    wait 0.48       ; Wait for 0.48 seconds
+  7 05 A001                    branch 0, loop1 ; Endless loop.
+  8                            
+
+================================
+Labels:
+loop1 = 01
+
+================================
+Segments:
+program1 = 00
+
+================================
+Free memory: 90
+Errors: 0

@@ -1,0 +1,7 @@
+.segment program1				   ;begining of a segment
+					mux_sel 1	   ;select LED1
+loop1:				ramp 0.6, 255  ; start of loop,
+					wait 0.1      ; half a second wait
+					ramp 0.6, -255	    ; set PWM to 0%
+					wait 0.1       ; half a second wait
+					branch 0, loop1	;endless looping
