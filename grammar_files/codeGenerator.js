@@ -4,8 +4,34 @@ $(function () {
         return i ? range1(i - 1).concat(i) : []
     }
 
+    var tolerance = 20;
+
+    function reduceColors(array, color) {
+        var previousValue;
+        return array.map(function (pixel, index, fullArray) {
+            var value = parseInt(pixel[color], 16);
+
+            if (index > 0) {
+                // var previousValue = parseInt(fullArray[index - 1][color], 16);
+                console.log('prev value = ' + previousValue);
+
+                if (Math.abs(previousValue - value) < tolerance) {
+                    value = previousValue;
+                    // fullArray[index] = 100;
+                } else {
+                    previousValue = value;
+                }
+
+            }else {
+                previousValue = value;
+            }
+
+            return value;
+        });
+    }
+
     console.log('generator started');
-    var pixels = sampleAnimation.animation[200].transitions.map(function (a) {
+    var pixels = sampleAnimation.animation[380].transitions.map(function (a) {
         var red = a.start.substring(0, 2);
         var green = a.start.substring(2, 4);
         var blue = a.start.substring(4);
@@ -46,6 +72,18 @@ $(function () {
         }
     };
 
+    var greenReducedData = {
+        x: range1(pixels.length),
+        y: reduceColors(pixels, 'green'),
+        mode: 'lines+markers',
+        name: 'green ramps',
+        type: 'scatter',
+        line: {
+            color: 'green',
+            width: 5
+        }
+    };
+
     var blueData = {
         x: range1(pixels.length),
         y: pixels.map(function (data) {
@@ -61,7 +99,8 @@ $(function () {
         }
     };
 
-    var data = [redData, blueData, greenData];
+
+    var data = [greenData, greenReducedData];
 
     var layout = {
         legend: {
