@@ -1,4 +1,9 @@
 $(function () {
+
+    function range1(i) {
+        return i ? range1(i - 1).concat(i) : []
+    }
+
     console.log('generator started');
     var pixels = sampleAnimation.animation[200].transitions.map(function (a) {
         var red = a.start.substring(0, 2);
@@ -12,19 +17,51 @@ $(function () {
 
 
     var redData = {
-        x: [1, 2, 3, 4, 5],
-        y: [26, 28, 27, 28, 26],
+        x: range1(pixels.length),
+        y: pixels.map(function (data) {
+            return parseInt(data.red, 16);
+        }),
         mode: 'lines+markers',
-        name: 'hv',
-        line: {shape: 'hv'},
+        name: 'red',
         type: 'scatter',
         line: {
             color: 'red',
+            width: 1,
+            shape: 'hv'
+        }
+    };
+
+    var greenData = {
+        x: range1(pixels.length),
+        y: pixels.map(function (data) {
+            return parseInt(data.green, 16);
+        }),
+        mode: 'lines+markers',
+        name: 'green',
+        type: 'scatter',
+        line: {
+            shape: 'hv',
+            color: 'green',
             width: 1
         }
     };
 
-    var data = [redData];
+    var blueData = {
+        x: range1(pixels.length),
+        y: pixels.map(function (data) {
+            return parseInt(data.blue, 16);
+        }),
+        mode: 'lines+markers',
+        name: 'blue',
+        type: 'scatter',
+        line: {
+            shape: 'hv',
+            color: 'blue',
+            width: 1
+        }
+    };
+
+    var data = [redData, blueData, greenData];
 
     var layout = {
         legend: {
