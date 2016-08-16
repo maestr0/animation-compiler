@@ -59,13 +59,6 @@ $(function () {
             }
         }
 
-        var pixels = sampleAnimation.animation[320].transitions.map(function (a) {
-            var red = a.start.substring(0, 2);
-            var green = a.start.substring(2, 4);
-            var blue = a.start.substring(4);
-            return {red: red, green: green, blue: blue};
-        });
-
         function createDataPoints(pixels, color) {
             return {
                 x: range1(pixels.length),
@@ -107,7 +100,7 @@ $(function () {
 
         }
 
-        function data(pixels) {
+        function dataSet(pixels) {
             var g = createDataPoints(pixels, 'green');
             var b = createDataPoints(pixels, 'blue');
             var r = createDataPoints(pixels, 'red');
@@ -118,12 +111,6 @@ $(function () {
             }
         }
 
-        var dataPoints = data(pixels);
-        var reduced = reduceData(pixels, 25);
-
-        var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
-
-
         var layout = {
             legend: {
                 y: 0.5,
@@ -133,7 +120,25 @@ $(function () {
             }
         };
 
-        Plotly.newPlot('myDiv', data, layout);
+        $("#plot").click(function () {
+            var trans = $("#maxTransitions").val();
+            var px = $("#pixel").val();
+
+            var pixels = sampleAnimation.animation[px].transitions.map(function (a) {
+                var red = a.start.substring(0, 2);
+                var green = a.start.substring(2, 4);
+                var blue = a.start.substring(4);
+                return {red: red, green: green, blue: blue};
+            });
+
+            var dataPoints = dataSet(pixels);
+            var reduced = reduceData(pixels, trans);
+
+            var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
+
+
+            Plotly.newPlot('myDiv', data, layout);
+        });
 
 
     }
