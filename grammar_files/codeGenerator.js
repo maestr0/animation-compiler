@@ -66,51 +66,22 @@ $(function () {
             return {red: red, green: green, blue: blue};
         });
 
-        var redData = {
-            x: range1(pixels.length),
-            y: pixels.map(function (data) {
-                return parseInt(data.red, 16);
-            }),
-            mode: 'lines+markers',
-            name: 'red',
-            type: 'scatter',
-            line: {
-                color: 'red',
-                width: 1,
-                shape: 'hv'
-            }
-        };
-
-        var greenData = {
-            x: range1(pixels.length),
-            y: pixels.map(function (data) {
-                return parseInt(data.green, 16);
-            }),
-            mode: 'lines+markers',
-            name: 'green',
-            type: 'scatter',
-            line: {
-                shape: 'hv',
-                color: 'green',
-                width: 1
-            }
-        };
-
-
-        var blueData = {
-            x: range1(pixels.length),
-            y: pixels.map(function (data) {
-                return parseInt(data.blue, 16);
-            }),
-            mode: 'lines+markers',
-            name: 'blue',
-            type: 'scatter',
-            line: {
-                shape: 'hv',
-                color: 'blue',
-                width: 1
-            }
-        };
+        function createDataPoints(pixels, color) {
+            return {
+                x: range1(pixels.length),
+                y: pixels.map(function (data) {
+                    return parseInt(data[color], 16);
+                }),
+                mode: 'lines+markers',
+                name: color,
+                type: 'scatter',
+                line: {
+                    shape: 'hv',
+                    color: color,
+                    width: 1
+                }
+            };
+        }
 
         function reduceData(pixels, maxTransitionNo) {
 
@@ -136,9 +107,21 @@ $(function () {
 
         }
 
-        var d = reduceData(pixels, 25);
+        function data(pixels) {
+            var g = createDataPoints(pixels, 'green');
+            var b = createDataPoints(pixels, 'blue');
+            var r = createDataPoints(pixels, 'red');
+            return {
+                r: r,
+                g: g,
+                b: b
+            }
+        }
 
-        var data = [greenData, d.g, blueData, d.b, redData, d.r];
+        var dataPoints = data(pixels);
+        var reduced = reduceData(pixels, 25);
+
+        var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
 
 
         var layout = {
