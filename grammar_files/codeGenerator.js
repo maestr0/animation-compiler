@@ -4,6 +4,12 @@ $(function () {
             return i ? range1(i - 1).concat(i) : []
         }
 
+        function loadAnimationData(animationId, cb) {
+            $.getJSON("//sara.us-east-1.elasticbeanstalk.com/animations/" + animationId + "?callback=?", function (data) {
+                cb(data);
+            });
+        }
+
         function reduceColors(array, color, tolerance) {
             var previousValue;
             return array.map(function (pixel, index, fullArray) {
@@ -100,6 +106,11 @@ $(function () {
 
         }
 
+        function rampAnimation(animationData, cb) {
+            // TODO
+            return animationData;
+        }
+
         function dataSet(pixels) {
             var g = createDataPoints(pixels, 'green');
             var b = createDataPoints(pixels, 'blue');
@@ -120,26 +131,47 @@ $(function () {
             }
         };
 
-        $("#plot").click(function () {
-            var trans = $("#maxTransitions").val();
-            var px = $("#pixel").val();
-
-            var pixels = sampleAnimation.animation[px].transitions.map(function (a) {
+        function extractPixels(animation, pixelIndex) {
+            return animation.animation[pixelIndex].transitions.map(function (a) {
                 var red = a.start.substring(0, 2);
                 var green = a.start.substring(2, 4);
                 var blue = a.start.substring(4);
                 return {red: red, green: green, blue: blue};
             });
+        }
 
-            var dataPoints = dataSet(pixels);
-            var reduced = reduceData(pixels, trans);
-
-            var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
-
-
-            Plotly.newPlot('myDiv', data, layout);
+        $("#plot").click(function () {
+            var trans = $("#maxTransitions").val();
+            var px = $("#pixel").val();
+            var animationId = $("#animationDropdown").val();
+            loadAnimationData(animationId, function (animationData) {
+                var pixels = extractPixels(animationData, px);
+                var dataPoints = dataSet(pixels);
+                var reduced = reduceData(pixels, trans);
+                var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
+                Plotly.newPlot('myDiv', data, layout);
+            });
         });
 
+        var player = new SaraPlayer({
+            wrapperClass: ".preview"
+        });
+
+        $("#play").click(function () {
+            var animationId = $("#animationDropdown").val();
+            loadAnimationData(animationId, function (animationData) {
+                player.startAnimation(animationData);
+            });
+        });
+
+        $("#playRamps").click(function () {
+            var animationId = $("#animationDropdown").val();
+            loadAnimationData(animationId, function (animationData) {
+                rampAnimation(animationData, function (d) {
+                    player.startAnimation(d);
+                });
+            });
+        });
 
     }
 );
