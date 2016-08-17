@@ -5,7 +5,7 @@ $(function () {
         }
 
         function loadAnimationData(animationId, cb) {
-            $.getJSON("//sara.us-east-1.elasticbeanstalk.com/animations/" + animationId + "?callback=?", function (data) {
+            $.getJSON("http//sara.us-east-1.elasticbeanstalk.com/animations/" + animationId + "?callback=?", function (data) {
                 cb(data);
             });
         }
