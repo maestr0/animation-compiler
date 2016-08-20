@@ -69,11 +69,11 @@ $(function () {
                 x: range1(pixels.length),
                 y: pixels,
                 mode: 'markers',
-                name: color + ' reduced as FRAMES',
+                name: color + ' Ramps as FRAMES',
                 type: 'scatter',
                 line: {
-                    color: color,
-                    width: 5
+                    color: 'black',
+                    width: 15
                 }
             }
         }
@@ -101,7 +101,14 @@ $(function () {
                 var gr = reduceColors(pixels, 'green', i);
                 var br = reduceColors(pixels, 'blue', i);
                 var rr = reduceColors(pixels, 'red', i);
-                if (countChannelChanges(rr) + countChannelChanges(br) + countChannelChanges(gr) < maxTransitionNo) {
+
+                var tr = countChannelChanges(rr);
+                var tb = countChannelChanges(br);
+                var tg = countChannelChanges(gr);
+                var transitionsSum = tr + tb + tg;
+                if (transitionsSum < maxTransitionNo) {
+                    $("#tolerance span").text(i);
+                    $("#transitions span").text(transitionsSum + " r=" + tr + " g=" + tg + " b=" + tb);
                     break;
                 }
             }
@@ -193,6 +200,18 @@ $(function () {
             return {r: createDotsDataPoints(reduced, r.r.line.color)};
 
         }
+
+        $("#nextPixel").click(function () {
+            var pixelPosition = $("#pixel").val();
+            $("#pixel").val(++pixelPosition);
+            $("#plot").click();
+        });
+
+        $("#prevPixel").click(function () {
+            var pixelPosition = $("#pixel").val();
+            $("#pixel").val(--pixelPosition);
+            $("#plot").click();
+        });
 
         $("#plot").click(function () {
             var transitions = $("#maxTransitions").val();
