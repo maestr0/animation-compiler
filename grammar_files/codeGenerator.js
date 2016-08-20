@@ -18,7 +18,6 @@ $(function () {
                 if (index > 0) {
                     if (Math.abs(previousValue - value) < tolerance) {
                         value = previousValue;
-                        // fullArray[index] = 100;
                     } else {
                         previousValue = value;
                     }
@@ -34,8 +33,8 @@ $(function () {
         function countChannelChanges(data) {
             var changes = 0;
             var flat = false;
-            var previousValue = data.y[0];
-            data.y.map(function (value) {
+            var previousValue = data[0];
+            data.map(function (value) {
                 if (value != previousValue) {
                     changes++;
                     previousValue = value;
@@ -51,12 +50,26 @@ $(function () {
             return changes;
         }
 
-        function createReducedDataPoints(pixels, color, tolerance) {
+        function createReducedDataPoints(pixels, color) {
             return {
                 x: range1(pixels.length),
-                y: reduceColors(pixels, color, tolerance),
+                y: pixels,
                 mode: 'lines+markers',
                 name: color + ' ramps',
+                type: 'scatter',
+                line: {
+                    color: color,
+                    width: 5
+                }
+            }
+        }
+
+        function createDotsDataPoints(pixels, color) {
+            return {
+                x: range1(pixels.length),
+                y: pixels,
+                mode: 'markers',
+                name: color + ' reduced as FRAMES',
                 type: 'scatter',
                 line: {
                     color: color,
@@ -85,23 +98,18 @@ $(function () {
         function reduceData(pixels, maxTransitionNo) {
 
             for (var i = 0; i < 255; i++) {
-                var gr = createReducedDataPoints(pixels, 'green', i);
-                var br = createReducedDataPoints(pixels, 'blue', i);
-                var rr = createReducedDataPoints(pixels, 'red', i);
+                var gr = reduceColors(pixels, 'green', i);
+                var br = reduceColors(pixels, 'blue', i);
+                var rr = reduceColors(pixels, 'red', i);
                 if (countChannelChanges(rr) + countChannelChanges(br) + countChannelChanges(gr) < maxTransitionNo) {
                     break;
                 }
             }
 
-
-            console.log("rr " + countChannelChanges(rr));
-            console.log("br " + countChannelChanges(br));
-            console.log("gr " + countChannelChanges(gr));
-
             return {
-                r: rr,
-                g: gr,
-                b: br
+                r: createReducedDataPoints(rr, 'red'),
+                g: createReducedDataPoints(gr, 'green'),
+                b: createReducedDataPoints(br, 'blue')
             }
 
         }
@@ -131,8 +139,12 @@ $(function () {
             }
         };
 
-        function extractPixels(animation, pixelIndex) {
-            return animation.animation[pixelIndex].transitions.map(function (a) {
+        function extractPixelsFromAnimation(animation, pixelIndex) {
+            return extractPixels(animation.animation[pixelIndex]);
+        }
+
+        function extractPixels(pixels) {
+            return pixels.transitions.map(function (a) {
                 var red = a.start.substring(0, 2);
                 var green = a.start.substring(2, 4);
                 var blue = a.start.substring(4);
@@ -140,15 +152,59 @@ $(function () {
             });
         }
 
+        function generateAnimationCode(allPixels, transitions) {
+            var pixelsInRGB = allPixels.animation.map(function (pixel) {
+                var ep = extractPixels(pixel);
+                var rd2 = reduceData(ep, transitions);
+                return {
+                    blue: rd2.b.y,
+                    green: rd2.g.y,
+                    red: rd2.r.y
+                };
+            });
+
+            var code = "***** BEGIN *****\n";
+            pixelsInRGB.map(function (pixel, index, fullArray) {
+                code += "\nMODULE " + index + "\n";
+                var previousValue = -1;
+                var count = 0;
+                $.each(pixel.red, function (index) {
+                    if (previousValue.toString() != this.toString()) {
+                        if (count == 0) {
+                            code += "RAMP " + this;
+                            count++;
+                        } else {
+                            code += " duration " + count + "\n";
+                            code += "RAMP " + this;
+                            count = 0;
+                        }
+
+                    } else {
+                        count++;
+                    }
+                    previousValue = this;
+                });
+            });
+            console.log(code);
+        }
+
+        function convertReducedIntoFullFrames(r) {
+            var reduced = r.r.y.slice(0);
+            return {r: createDotsDataPoints(reduced, r.r.line.color)};
+
+        }
+
         $("#plot").click(function () {
-            var trans = $("#maxTransitions").val();
-            var px = $("#pixel").val();
+            var transitions = $("#maxTransitions").val();
+            var pixelPosition = $("#pixel").val();
             var animationId = $("#animationDropdown").val();
             loadAnimationData(animationId, function (animationData) {
-                var pixels = extractPixels(animationData, px);
+                var pixels = extractPixelsFromAnimation(animationData, pixelPosition);
                 var dataPoints = dataSet(pixels);
-                var reduced = reduceData(pixels, trans);
-                var data = [dataPoints.g, reduced.g, dataPoints.b, reduced.b, dataPoints.r, reduced.r];
+                var reduced = reduceData(pixels, transitions);
+                var reducedConvertedIntoFrames = convertReducedIntoFullFrames(reduced);
+                // dataPoints.g, reduced.g, dataPoints.b, reduced.b,
+                var data = [dataPoints.r, reduced.r, reducedConvertedIntoFrames.r];
                 Plotly.newPlot('myDiv', data, layout);
             });
         });
@@ -161,6 +217,17 @@ $(function () {
             var animationId = $("#animationDropdown").val();
             loadAnimationData(animationId, function (animationData) {
                 player.startAnimation(animationData);
+            });
+        });
+
+        $("#generateCode").click(function () {
+            var transitions = $("#maxTransitions").val();
+            var animationId = $("#animationDropdown").val();
+            loadAnimationData(animationId, function (animationData) {
+                setTimeout(function () {
+                    generateAnimationCode(animationData, transitions);
+                }, 0);
+
             });
         });
 
