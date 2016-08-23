@@ -27,6 +27,7 @@ function SaraPlayer(options) {
             id: canvasRandomId
         }).attr("width", this.settings.width)
             .attr("height", this.settings.height)
+            .attr("style", "background-color:black")
             .appendTo(this.settings.wrapperClass);
 
         var that = this;

@@ -251,21 +251,23 @@ $(function () {
                 var pixels = extractPixelsFromAnimation(animationData, pixelPosition);
                 var dataPoints = dataSet(pixels);
                 var reduced = reducedChartData(reduceData(pixels, transitions));
-                var reducedConvertedIntoFrames = convertReducedIntoFullFrames(reduced);
-                // dataPoints.g, reduced.g, dataPoints.b, reduced.b,
-                var data = [dataPoints.r, reduced.r, reducedConvertedIntoFrames.r];
+                var data = [dataPoints.r, reduced.r, dataPoints.g, reduced.g, dataPoints.b, reduced.b];
                 Plotly.newPlot('myDiv', data, layout);
             });
         });
 
-        var player = new SaraPlayer({
-            wrapperClass: ".preview"
+        var playerOriginal = new SaraPlayer({
+            wrapperClass: ".previewOriginal"
+        });
+
+        var playerRamped = new SaraPlayer({
+            wrapperClass: ".previewRamped"
         });
 
         $("#play").click(function () {
             var animationId = $("#animationDropdown").val();
             loadAnimationData(animationId, function (animationData) {
-                player.startAnimation(animationData);
+                playerOriginal.startAnimation(animationData);
             });
         });
 
@@ -284,8 +286,11 @@ $(function () {
             var animationId = $("#animationDropdown").val();
             var transitions = $("#maxTransitions").val();
             loadAnimationData(animationId, function (animationData) {
+                var clonedOriginalAni = jQuery.extend(true, {}, animationData);
                 var rampedAnimation = rampAnimation(animationData, transitions);
-                player.startAnimation(rampedAnimation);
+
+                playerOriginal.startAnimation(clonedOriginalAni);
+                playerRamped.startAnimation(rampedAnimation);
             });
         });
 

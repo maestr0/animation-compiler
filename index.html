@@ -10,32 +10,34 @@
 <body>
 <h1>generator</h1>
 <div>
-<div style="float: left;width: 400px">
-    <label for="pixel">Pixel/module index</label>
-    <input id="pixel" placeholder="pixen no" value="410"/>
-    <button id="prevPixel"> << </button>
-    <button id="nextPixel"> >> </button>
-    <br/>
-    <label for="animationDropdown">Animation Id</label>
-    <input id="animationDropdown" placeholder="animation id" value="1166"/><br/>
-    <label for="maxTransitions">Max no of transitions</label>
-    <input id="maxTransitions" placeholder="maxTransitions" value="30"/><br/>
-</div>
     <div style="float: left;width: 400px">
-    <button id="plot">PLOT</button>
-    <br/>
-    <button id="play">Play ORIGINAL</button>
-    <br/>
-    <button id="playRamps">Play RAMPS</button>
-    <br/>
-    <button id="generateCode">Generate CODE</button>
-</div>
+        <label for="pixel">Pixel/module index</label>
+        <input id="pixel" placeholder="pixen no" value="410"/>
+        <button id="prevPixel"> <<</button>
+        <button id="nextPixel"> >></button>
+        <br/>
+        <label for="animationDropdown">Animation Id</label>
+        <input id="animationDropdown" placeholder="animation id" value="1162"/><br/>
+        <label for="maxTransitions">Max no of transitions</label>
+        <input id="maxTransitions" placeholder="maxTransitions" value="90"/><br/>
+    </div>
+    <div style="float: left;width: 400px">
+        <button id="plot">PLOT PIXEL</button>
+        <br/>
+        <button id="play" >Play ORIGINAL</button>
+        <br/>
+        <button id="playRamps" style="color: red;font-size: 20px">Play BOTH</button>
+        <br/>
+        <button id="generateCode">Generate CODE - TODO</button>
+    </div>
     <div style="float:left;">
         <p id="tolerance">Tolerance level: <span></span></p>
         <p id="transitions">Transitions: <span></span></p>
     </div>
 </div>
-<div class="preview"></div>
+<div class="previewOriginal"></div>
+<br/>
+<div class="previewRamped"></div>
 <div id="myDiv" style="width: 100%; height: 400px;"><!-- Plotly chart will be drawn inside this DIV --></div>
 </body>
 </html>
