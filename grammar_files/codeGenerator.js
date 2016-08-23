@@ -129,11 +129,28 @@ $(function () {
 
         }
 
+        function toHex(integer) {
+            return ("000000000000000" + integer.toString(16)).substr(-2);
+        }
+
+        function combinePixelsIntoHexStrings(r, g, b) {
+            return toHex(r) + toHex(g) + toHex(b);
+        }
+
         function rampAnimation(animationData, transitions, cb) {
-            for (var i = 0; i < animationData.animation.length; i++) {
-                var pixelFrame = animationData.animation[i];
+            for (var pixelIndex = 0; pixelIndex < animationData.animation.length; pixelIndex++) {
+                var pixelFrame = animationData.animation[pixelIndex];
                 var pixelFrameSeparatedColors = extractPixels(pixelFrame);
                 var pixelFrameSeparatedColorsReduced = reduceData(pixelFrameSeparatedColors, transitions);
+                var combinedFrames = [];
+                for (var frameIndex = 0; frameIndex < pixelFrameSeparatedColorsReduced.r.length; frameIndex++) {
+                    var hexColor = combinePixelsIntoHexStrings(pixelFrameSeparatedColorsReduced.r[frameIndex],
+                        pixelFrameSeparatedColorsReduced.g[frameIndex],
+                        pixelFrameSeparatedColorsReduced.b[frameIndex]);
+                    pixelFrame.transitions[frameIndex].start = hexColor;
+                    pixelFrame.transitions[frameIndex].end = hexColor;
+                    // combinedFrames.push(hexColor);
+                }
             }
 
             return animationData;
@@ -267,9 +284,8 @@ $(function () {
             var animationId = $("#animationDropdown").val();
             var transitions = $("#maxTransitions").val();
             loadAnimationData(animationId, function (animationData) {
-                rampAnimation(animationData, transitions, function (d) {
-                    player.startAnimation(d);
-                });
+                var rampedAnimation = rampAnimation(animationData, transitions);
+                player.startAnimation(rampedAnimation);
             });
         });
 
