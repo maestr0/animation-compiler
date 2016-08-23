@@ -200,27 +200,27 @@ $(function () {
                 };
             });
 
+            var pixelPosition = $("#pixel").val();
             var code = "***** BEGIN *****\n";
             pixelsInRGB.map(function (pixel, index, fullArray) {
-                code += "\nMODULE " + index + "\n";
-                var previousValue = -1;
-                var count = 0;
-                $.each(pixel.red, function (index) {
-                    if (previousValue.toString() != this.toString()) {
-                        if (count == 0) {
-                            code += "RAMP " + this;
-                            count++;
-                        } else {
-                            code += " duration " + count + "\n";
-                            code += "RAMP " + this;
+                if (pixelPosition == index) {
+                    code += "\nMODULE " + index + "\n";
+                    var previousValue = pixel.red[0];
+                    var count = 0;
+                    code += "\nRAMP " + pixel.red[0];
+                    pixel.red.map(function (px, index) {
+                        if (previousValue != px) {
+                            code += " duration " + count + "\nRAMP " + px;
                             count = 0;
+                        } else {
+                            // code += " duration " + count + "\n";
+                            count++;
                         }
+                        previousValue = px;
+                    });
 
-                    } else {
-                        count++;
-                    }
-                    previousValue = this;
-                });
+                    code += " duration " + count;
+                }
             });
             console.log(code);
         }
@@ -251,7 +251,8 @@ $(function () {
                 var pixels = extractPixelsFromAnimation(animationData, pixelPosition);
                 var dataPoints = dataSet(pixels);
                 var reduced = reducedChartData(reduceData(pixels, transitions));
-                var data = [dataPoints.r, reduced.r, dataPoints.g, reduced.g, dataPoints.b, reduced.b];
+                //dataPoints.g, reduced.g, dataPoints.b, reduced.b
+                var data = [dataPoints.r, reduced.r];
                 Plotly.newPlot('myDiv', data, layout);
             });
         });
@@ -275,9 +276,7 @@ $(function () {
             var transitions = $("#maxTransitions").val();
             var animationId = $("#animationDropdown").val();
             loadAnimationData(animationId, function (animationData) {
-                setTimeout(function () {
-                    generateAnimationCode(animationData, transitions);
-                }, 0);
+                generateAnimationCode(animationData, transitions);
 
             });
         });
