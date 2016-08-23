@@ -13,7 +13,7 @@ $(function () {
         function reduceColors(array, color, tolerance) {
             var previousValue;
             return array.map(function (pixel, index, fullArray) {
-                var value = parseInt(pixel[color], 16);
+                var value = pixel[color];
 
                 if (index > 0) {
                     if (Math.abs(previousValue - value) < tolerance) {
@@ -82,7 +82,7 @@ $(function () {
             return {
                 x: range1(pixels.length),
                 y: pixels.map(function (data) {
-                    return parseInt(data[color], 16);
+                    return data[color];
                 }),
                 mode: 'lines+markers',
                 name: color,
@@ -93,6 +93,14 @@ $(function () {
                     width: 1
                 }
             };
+        }
+
+        function reducedChartData(pixels) {
+            return {
+                r: createReducedDataPoints(pixels.r, 'red'),
+                g: createReducedDataPoints(pixels.g, 'green'),
+                b: createReducedDataPoints(pixels.b, 'blue')
+            }
         }
 
         function reduceData(pixels, maxTransitionNo) {
@@ -114,15 +122,20 @@ $(function () {
             }
 
             return {
-                r: createReducedDataPoints(rr, 'red'),
-                g: createReducedDataPoints(gr, 'green'),
-                b: createReducedDataPoints(br, 'blue')
+                r: rr,
+                g: gr,
+                b: br
             }
 
         }
 
-        function rampAnimation(animationData, cb) {
-            // TODO
+        function rampAnimation(animationData, transitions, cb) {
+            for (var i = 0; i < animationData.animation.length; i++) {
+                var pixelFrame = animationData.animation[i];
+                var pixelFrameSeparatedColors = extractPixels(pixelFrame);
+                var pixelFrameSeparatedColorsReduced = reduceData(pixelFrameSeparatedColors, transitions);
+            }
+
             return animationData;
         }
 
@@ -152,9 +165,9 @@ $(function () {
 
         function extractPixels(pixels) {
             return pixels.transitions.map(function (a) {
-                var red = a.start.substring(0, 2);
-                var green = a.start.substring(2, 4);
-                var blue = a.start.substring(4);
+                var red = parseInt(a.start.substring(0, 2), 16);
+                var green = parseInt(a.start.substring(2, 4), 16);
+                var blue = parseInt(a.start.substring(4), 16);
                 return {red: red, green: green, blue: blue};
             });
         }
@@ -162,7 +175,7 @@ $(function () {
         function generateAnimationCode(allPixels, transitions) {
             var pixelsInRGB = allPixels.animation.map(function (pixel) {
                 var ep = extractPixels(pixel);
-                var rd2 = reduceData(ep, transitions);
+                var rd2 = reducedChartData(reduceData(ep, transitions));
                 return {
                     blue: rd2.b.y,
                     green: rd2.g.y,
@@ -220,7 +233,7 @@ $(function () {
             loadAnimationData(animationId, function (animationData) {
                 var pixels = extractPixelsFromAnimation(animationData, pixelPosition);
                 var dataPoints = dataSet(pixels);
-                var reduced = reduceData(pixels, transitions);
+                var reduced = reducedChartData(reduceData(pixels, transitions));
                 var reducedConvertedIntoFrames = convertReducedIntoFullFrames(reduced);
                 // dataPoints.g, reduced.g, dataPoints.b, reduced.b,
                 var data = [dataPoints.r, reduced.r, reducedConvertedIntoFrames.r];
@@ -252,12 +265,14 @@ $(function () {
 
         $("#playRamps").click(function () {
             var animationId = $("#animationDropdown").val();
+            var transitions = $("#maxTransitions").val();
             loadAnimationData(animationId, function (animationData) {
-                rampAnimation(animationData, function (d) {
+                rampAnimation(animationData, transitions, function (d) {
                     player.startAnimation(d);
                 });
             });
         });
 
+        $("#plot").click();
     }
 );
