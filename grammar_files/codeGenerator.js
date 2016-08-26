@@ -1,7 +1,7 @@
 $(function () {
 
         function range1(i) {
-            return i ? range1(i - 1).concat(i) : []
+            return i > -1 ? range1(i - 1).concat(i) : []
         }
 
         function loadAnimationData(animationId, cb) {
@@ -52,7 +52,7 @@ $(function () {
 
         function createReducedDataPoints(pixels, color) {
             return {
-                x: range1(pixels.length),
+                x: range1(pixels.length - 1),
                 y: pixels,
                 mode: 'lines+markers',
                 name: color + ' ramps',
@@ -66,7 +66,7 @@ $(function () {
 
         function createDotsDataPoints(pixels, color) {
             return {
-                x: range1(pixels.length),
+                x: range1(pixels.length - 1),
                 y: pixels,
                 mode: 'markers',
                 name: color + ' Ramps as FRAMES',
@@ -80,7 +80,7 @@ $(function () {
 
         function createDataPoints(pixels, color) {
             return {
-                x: range1(pixels.length),
+                x: range1(pixels.length - 1),
                 y: pixels.map(function (data) {
                     return data[color];
                 }),
@@ -222,7 +222,7 @@ $(function () {
                     code += " duration " + count;
                 }
             });
-            console.log(code);
+            $("#code").text(code);
         }
 
         function convertReducedIntoFullFrames(r) {
